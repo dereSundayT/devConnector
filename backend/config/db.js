@@ -9,6 +9,7 @@ const connectDB = async  () => {
         mongoose.set('strictQuery', true)
         await mongoose.connect(`mongodb+srv://${appConfig.db_user_name}:${appConfig.db_password}@mernstackcluster.iviidv1.mongodb.net/?retryWrites=true&w=majority`,{
             useNewUrlParser : true,
+            // useCreateIndex : true
         })
         console.log("MongoDB Connected...")
     }
