@@ -3,10 +3,12 @@ const router = express.Router()
 //TODO :: Read about this
 const gravatar = require('gravatar')
 const bcrypt = require('bcryptjs')
+const jwt = require('jsonwebtoken')
 const {check, validationResult} = require("express-validator")
+const appConfig = require('../../config/config')
 const User = require('../../models/User')
 
-
+//jst.io
 /**
  * @route GET api/users
  * @desc  Register User
@@ -21,14 +23,14 @@ router.post('/',
     async (req, res) => {
         const errors = validationResult(req)
         if (!errors.isEmpty()) {
-           return res.status(400).json({errors: errors.array()})
+            return res.status(400).json({errors: errors.array()})
         }
         let {name, email, password} = req.body
         try {
             //see if the use exist
             let user = await User.findOne({email})
             if (user) {
-             return   res.status(400).json({
+                return res.status(400).json({
                     errors: [{msg: 'User already exists'}]
                 })
             }
@@ -46,12 +48,25 @@ router.post('/',
             user.password = await bcrypt.hash(password, salt)
             await user.save()
             //Return json web token
-            res.json('user registered')
+            const payload = {
+                user: {
+                    id: user.id,
+                }
+            }
+            jwt.sign(payload,
+                appConfig.jwtSecret,
+                {
+                    expiresIn: 360000000
+                },
+                (err, token) => {
+                    if (err) throw  err;
+                    res.json({token})
+                }
+            )
         } catch (e) {
             console.error(e.message)
             res.status(500).send('Server error')
         }
-
     })
 
 module.exports = router;
