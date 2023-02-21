@@ -1,5 +1,6 @@
 const express = require('express')
 const router = express.Router()
+
 const auth = require('../../middleware/auth')
 const Profile = require('../../models/Profile')
 const User = require('../../models/User')
@@ -137,6 +138,29 @@ router.get('/user/:user_id', async (req, res) => {
 			return res.status(400).json({ msg: 'There is no profile for this user' })
 
 		res.json(profile)
+	} catch (err) {
+		console.log(err.message)
+		if (err.kind == 'ObjectId') {
+			return res.status(400).json({ msg: 'Profile not Found' })
+		}
+		res.status(500).send('Server Error')
+	}
+})
+
+/**
+ * @route DELETE api/profile/user/:user_id
+ * @desc  DELETE profile , user & post
+ * @access Private
+ */
+
+router.delete('/', auth, async (req, res) => {
+	try {
+		//remove profile
+		await Profile.findOneAndRemove({ user: req.user.id })
+		await User.findOneAndRemove({ _id: req.user.id })
+
+		//remove user posts
+		res.json({ msg: 'User deleted' })
 	} catch (err) {
 		console.log(err.message)
 		if (err.kind == 'ObjectId') {
